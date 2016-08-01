@@ -78,15 +78,16 @@ for(i in seq_along(est)) {
   d <- data.frame(est_dt = est.dt, est_value = est.value, stringsAsFactors = FALSE)
   d$client_id <- client[i]
   d$stat_dt <- basedate
-  
-  apply(d,
-        1,
-        function(r) {
-          sql <- sprintf("INSERT INTO ltvs (stat_dt, client_id, est_dt, est_value) VALUES ('%s', '%s', '%s', %f)",
-                         r[4], r[3], r[1], as.numeric(r[2]))
-          
-          dbSendQuery(conn, sql)
-        })
+
+  values <- paste(unlist(apply(d,
+                               1,
+                               function(r) {
+                                 sprintf("('%s', '%s', '%s', %f)", r[4], r[3], r[1], as.numeric(r[2]))
+                               })), collapse = ',')
+
+  sql <- sprintf("INSERT INTO ltvs (stat_dt, client_id, est_dt, est_value) VALUES %s", values)
+  print(sql)
+  dbSendQuery(conn, sql)  
 }
 
 dbCommit(conn)

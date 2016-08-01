@@ -137,64 +137,70 @@ reduce <- function(k, v, context) {
               ncol = 4,
               byrow = TRUE)
   
-  x = as.integer(m[, 1])
-  t.x = as.numeric(m[, 2])
-  T.cal = as.numeric(m[, 3])
-  zbar = as.numeric(m[, 4])
+  d <- data.frame(
+    x = as.integer(m[, 1]),
+    t.x = as.numeric(m[, 2]),
+    T.cal = as.numeric(m[, 3]),
+    zbar = as.numeric(m[, 4]),
+    custs = 1
+  )
+  
+  d <- aggregate(custs ~ x + t.x + T.cal + zbar, data = d, FUN = sum)
   rm(m)
   
-  if (max(T.cal) < 30) {
+  if (max(d$T.cal) < 30) {
     return(NULL)
   }
   
   mv <- gg.ConditionalExpectedMeanTransactionValue(params = params$gg, 
-                                                   x = x,
-                                                   zbar = zbar)
+                                                   x = d$x,
+                                                   zbar = d$zbar)
   mv[mv < 0] <- 0
   
   est <- list()
-  if (!is.null(params$pnbd)) {
-    e <- c()
-    for (t in T.STAR) {
-      tx <- pnbd.ConditionalExpectedTransactions(params = params$pnbd, 
-                                                 T.star = t, 
-                                                 x = x,
-                                                 t.x = t.x,
-                                                 T.cal = T.cal)
-      
-      
-      tx[tx < 0] <- 0
-      e[t] <- sum(tx * mv, na.rm = TRUE)
-    }
-    
-    l <- as.list(diff(c(0, e), lag = 1, differences = 1))
-    names(l) <- format(x = context$base.date + T.STAR - 1, format = DATE.FORMAT)
-    
-    est$pnbd <- l
-  }
-  
-  if (!is.null(params$bgnbd)) {
-    e <- c()
-    for (t in T.STAR) {
-      tx <- bgnbd.ConditionalExpectedTransactions(params = params$bgnbd, 
-                                                  T.star = t, 
-                                                  x = x,
-                                                  t.x = t.x,
-                                                  T.cal = T.cal)
-      
-      tx[tx < 0] <- 0
-      e[t] <- sum(tx * mv, na.rm = TRUE)
-    }
-    
-    l <- as.list(diff(c(0, e), lag = 1, differences = 1))
-    names(l) <- format(x = context$base.date + T.STAR - 1, format = DATE.FORMAT)
-    
-    est$bgnbd <- l
-  }
-  
+#   if (!is.null(params$pnbd)) {
+#     e <- c()
+#     for (t in T.STAR) {
+#       tx <- pnbd.ConditionalExpectedTransactions(params = params$pnbd, 
+#                                                  T.star = t, 
+#                                                  x = x,
+#                                                  t.x = t.x,
+#                                                  T.cal = T.cal)
+#       
+#       
+#       tx[tx < 0] <- 0
+#       e[t] <- sum(tx * mv, na.rm = TRUE)
+#     }
+#     
+#     l <- as.list(diff(c(0, e), lag = 1, differences = 1))
+#     names(l) <- format(x = context$base.date + T.STAR - 1, format = DATE.FORMAT)
+#     
+#     est$pnbd <- l
+#   }
+#   
+#   if (!is.null(params$bgnbd)) {
+#     e <- c()
+#     for (t in T.STAR) {
+#       tx <- bgnbd.ConditionalExpectedTransactions(params = params$bgnbd, 
+#                                                   T.star = t, 
+#                                                   x = x,
+#                                                   t.x = t.x,
+#                                                   T.cal = T.cal)
+#       
+#       tx[tx < 0] <- 0
+#       e[t] <- sum(tx * mv, na.rm = TRUE)
+#     }
+#     
+#     l <- as.list(diff(c(0, e), lag = 1, differences = 1))
+#     names(l) <- format(x = context$base.date + T.STAR - 1, format = DATE.FORMAT)
+#     
+#     est$bgnbd <- l
+#   }
+
+  valid <- TRUE  
   if (!is.null(params$cbgcnbd)) {
     e <- c()
-    n <- length(x)
+    n <- length(d$x)
     
     #     std.x <- (x- ) / 
     #     std.t.x <- (t.x - ) / 
@@ -203,13 +209,17 @@ reduce <- function(k, v, context) {
     
     for (t in T.STAR) {
       tx <- cbgcnbd.ConditionalExpectedTransactions(params = params$cbgcnbd, 
-                                                    T.star = t, 
-                                                    x = x,
-                                                    t.x = t.x,
-                                                    T.cal = T.cal)
+                                            T.star = t, 
+                                            x = d$x,
+                                            t.x = d$t.x,
+                                            T.cal = d$T.cal)
       
       tx[tx < 0] <- 0
-      e[t] <- sum(tx * mv, na.rm = TRUE)
+      e[t] <- sum(tx * mv * d$custs, na.rm = TRUE)
+     
+      if (is.na(e[t]) || is.infinite(e[t])) {
+        valid <- FALSE
+      }
     }
     
     l <- as.list(diff(c(0, e), lag = 1, differences = 1))
@@ -217,6 +227,10 @@ reduce <- function(k, v, context) {
     
     est$cbgcnbd <- l
   }
-  
-  list(k, as.character(toJSON(est, auto_unbox = TRUE)))
+ 
+  if (valid) { 
+    list(k, as.character(toJSON(est, auto_unbox = TRUE)))
+  } else {
+    NULL
+  }
 }
