@@ -123,11 +123,14 @@ setup <- function(context) {
 
 T.STAR <- 1:60
 reduce <- function(k, v, context) {
+  x <- unlist(strsplit(k, split = "\001"))
+  k <- x[seq_along(x) %% 2 == 1]
+
   i <- which(context$models$client == k)
   if (length(i) == 0) {
     return(NULL)  
   }
-  
+
   params <- context$models$params[[i]]
   if (is.null(params$gg)) {
     return(NULL)
@@ -158,7 +161,6 @@ reduce <- function(k, v, context) {
                                                    zbar = d$zbar)
   mv[mv < 0] <- 0
   
-  est <- list()
 #   if (!is.null(params$pnbd)) {
 #     e <- c()
 #     for (t in T.STAR) {
@@ -199,6 +201,7 @@ reduce <- function(k, v, context) {
 #   }
 
   valid <- TRUE  
+  est <- NULL
   if (!is.null(params$cbgcnbd)) {
     e <- c()
     n <- length(d$x)
@@ -222,16 +225,11 @@ reduce <- function(k, v, context) {
         valid <- FALSE
       }
     }
-    
-    l <- as.list(diff(c(0, e), lag = 1, differences = 1))
-    names(l) <- format(x = context$base.date + T.STAR - 1, format = DATE.FORMAT)
-    
-    est$cbgcnbd <- l
+   
+    if (valid) { 
+      est <- diff(c(0, e), lag = 1, differences = 1)
+    }
   }
- 
-  if (valid) { 
-    list(k, as.character(toJSON(est, auto_unbox = TRUE)))
-  } else {
-    NULL
-  }
+
+  est 
 }
