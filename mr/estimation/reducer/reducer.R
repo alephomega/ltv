@@ -132,6 +132,11 @@ reduce <- function(k, v, context) {
   if (is.null(params$gg)) {
     return(NULL)
   }
+
+
+  if (all(params$gg == 1)) {
+    return(NULL)
+  }
   
   m <- matrix(unlist(strsplit(v, split = "\001")), 
               ncol = 4,
