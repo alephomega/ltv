@@ -58,9 +58,12 @@ if (!z) {
   command <- file.path(getwd(), "params.R")
   run.task(command, args)
 
-  command <- file.path(getwd(), "estimation.R")
+  command <- file.path(getwd(), "estimation_step1.R")
   run.task(command, args)
   
+  command <- file.path(getwd(), "estimation_step2.R")
+  run.task(command, args)
+
   command <- file.path(getwd(), "pg.R")
   run.task(command, args)
 }

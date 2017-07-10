@@ -14,9 +14,9 @@ setup <- function(context) {
 
 T.STAR <- 1:60
 reduce <- function(k, v, context) {
-
   est <- list()
-  l <- as.list(diff(Reduce(`+`, v), lag = 1, differences = 1))
+  m <- matrix(as.numeric(unlist(strsplit(v, split = '\001'))), ncol = length(T.STAR), byrow = TRUE)
+  l <- as.list(colSums(m))
   names(l) <- format(x = context$base.date + T.STAR - 1, format = DATE.FORMAT)
     
   est$cbgcnbd <- l

@@ -160,56 +160,12 @@ reduce <- function(k, v, context) {
                                                    x = d$x,
                                                    zbar = d$zbar)
   mv[mv < 0] <- 0
-  
-#   if (!is.null(params$pnbd)) {
-#     e <- c()
-#     for (t in T.STAR) {
-#       tx <- pnbd.ConditionalExpectedTransactions(params = params$pnbd, 
-#                                                  T.star = t, 
-#                                                  x = x,
-#                                                  t.x = t.x,
-#                                                  T.cal = T.cal)
-#       
-#       
-#       tx[tx < 0] <- 0
-#       e[t] <- sum(tx * mv, na.rm = TRUE)
-#     }
-#     
-#     l <- as.list(diff(c(0, e), lag = 1, differences = 1))
-#     names(l) <- format(x = context$base.date + T.STAR - 1, format = DATE.FORMAT)
-#     
-#     est$pnbd <- l
-#   }
-#   
-#   if (!is.null(params$bgnbd)) {
-#     e <- c()
-#     for (t in T.STAR) {
-#       tx <- bgnbd.ConditionalExpectedTransactions(params = params$bgnbd, 
-#                                                   T.star = t, 
-#                                                   x = x,
-#                                                   t.x = t.x,
-#                                                   T.cal = T.cal)
-#       
-#       tx[tx < 0] <- 0
-#       e[t] <- sum(tx * mv, na.rm = TRUE)
-#     }
-#     
-#     l <- as.list(diff(c(0, e), lag = 1, differences = 1))
-#     names(l) <- format(x = context$base.date + T.STAR - 1, format = DATE.FORMAT)
-#     
-#     est$bgnbd <- l
-#   }
 
   valid <- TRUE  
   est <- NULL
   if (!is.null(params$cbgcnbd)) {
     e <- c()
     n <- length(d$x)
-    
-    #     std.x <- (x- ) / 
-    #     std.t.x <- (t.x - ) / 
-    #     std.v <- (x*zbar - ) / 
-    #     w <- exp((std.x + std.t.x + std.v) / 3)
     
     for (t in T.STAR) {
       tx <- cbgcnbd.ConditionalExpectedTransactions(params = params$cbgcnbd, 
@@ -231,5 +187,9 @@ reduce <- function(k, v, context) {
     }
   }
 
-  est 
+  if (!valid) {
+    NULL   
+  } else {
+    list(k, paste(est, collapse = '\001'))
+  }
 }

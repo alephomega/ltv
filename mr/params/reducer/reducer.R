@@ -391,6 +391,8 @@ setup <- function(context) {
 }
 
 reduce <- function(k, v, context) {
+  gc()
+
   m <- matrix(unlist(strsplit(v, split = "\001")), 
               ncol = 4,
               byrow = TRUE)
@@ -410,6 +412,8 @@ reduce <- function(k, v, context) {
   if (max(cbs$T.cal) < 30) {
     return(NULL)
   }
+
+  gc()
   
   par.start <- list(
     c(1.0, 1.0, 1.0, 1.0),
